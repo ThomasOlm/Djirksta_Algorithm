@@ -14,3 +14,8 @@ Then when two or more circles are created, a line is drawn between them. This li
 This whole process can occur twice. 
 When the user is finished, they click the calculate route button and the dictionaries are passed to the algorithm.
 Algorthim returns best route, and that route is changed to green.
+
+Works fine now, in the future may add:
+- clear button 
+- display total distances of routes
+- random end point each time program is run 

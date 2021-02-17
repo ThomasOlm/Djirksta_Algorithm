@@ -108,36 +108,34 @@ def draw_window(circles_dict, lines_dict, num_array):
         for circle in circles_dict[key]:
             pygame.draw.circle(circle.get_surface(), circle.get_color(), circle.get_pos(), circle.get_width())
 
-
     pygame.display.update()
 
-def pass_list(lines,circles):
+    
+def pass_list(lines,circles_dict):
 
-    line_dictionary = lines.copy()
+    lines_dict = lines.copy()
     mega_dict = {}
     shortest_path_dict = {}
 
     # take each route from the lines dictionary and pass their respective distances into a new dictionary
-    for line_array in line_dictionary.keys():
-        for num in range(len(line_dictionary[line_array])):
-            mega_dict.update({line_dictionary[line_array][num].get_id(): line_dictionary[line_array][num].get_length()})
+    for key in lines_dict:
+        for lines in lines_dict[key]:
+            mega_dict.update({lines.get_id(): lines.get_length()})
 
     # take each circle array and pass their ids into a dictionary for Djirksta's algorithm
-    for circle_array in circles.keys():
-        for num in range(len(circles[circle_array])):
+    for key in circles_dict:
+        for circle in circles_dict[key]:
 
-            if circles[circle_array][num].get_id() == "A":
-                shortest_path_dict.update( {circles[circle_array][num].get_id(): 0})
+            if circle.get_id() == "A":
+                shortest_path_dict.update( {circle.get_id(): 0})
             else:
-                shortest_path_dict.update( {circles[circle_array][num].get_id(): math.inf})
+                shortest_path_dict.update( {circle.get_id(): math.inf})
 
     # set the rect cost to inf
     shortest_path_dict.update({"Z": math.inf})
 
     # return the dictionaries
     return mega_dict, shortest_path_dict
-
-
 
 """
 currently working on a way to connect circles after the two main routes have been established to show the real power of the algorithm

@@ -1,141 +1,271 @@
-import math
+import pygame
+import sys
+from Djirskta import *
 
-def Djirksta_Alg(dict_of_nodes, shortest_distance_from_A):
+pygame.init()
 
+WIDTH, HEIGHT = 900,500
+WIN = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Djirksta's Algorithm")
 
-    node_links = dict_of_nodes
+WHITE = (255, 255, 255)
+RADIUS = 10
+FPS = 60
+BUTTON_DEST = (WIDTH * .70, HEIGHT * .80)
 
-    previous_vertex = {}
+GREEN_POS = (WIDTH * .75, HEIGHT/2)
+GREEN = (0,255,0)
+LIGHT_SHADE = (170,170,170)
 
-    unvisted = []
+smallfont = pygame.font.SysFont('Corbel', 35)
+text = smallfont.render('Calculate Path!', True,
+                        (0,0,0))
 
-    for keys in shortest_distance_from_A.keys():
-        unvisted.append(keys)
+end_point = pygame.Rect(GREEN_POS[0], GREEN_POS[1], 50,50)
+button = pygame.Rect(BUTTON_DEST[0], BUTTON_DEST[1], 185,25)
 
+class Circle():
 
-    visited = []
+    ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    counter = 0
 
-    # print(find_smallest_dist(shortest_distance_from_A, visited))
+    def __init__(self, surface, color, pos, width):
+        self.surface = surface
+        self.color = color
+        self.pos = pos
+        self.width = width
 
-    while unvisted:
+        self.id = Circle.ALPHABET[Circle.counter:Circle.counter + 1]
+        Circle.counter += 1
 
-        # visit the vertex with the smallest known distance from A
-        target_node = find_smallest_dist(shortest_distance_from_A, visited)
+    def get_color(self):
+        return self.color
 
-        # for current vertex examine the distance to unvisted neighbor vertexes
-        paths_from_node = select_paths(target_node, visited, node_links)
-        # calculate the distance from each neighbor vertex from start vertex
-        # if calculated distance is less than known distance update shortest distance list
+    def get_surface(self):
+        return self.surface
 
-        check_routes(paths_from_node, shortest_distance_from_A, target_node, visited, previous_vertex)
-        # update the previous vertex for each of the updated distances
+    def get_pos(self):
+        return self.pos
 
-        # add current vertex to visted listed
-        visited.append(target_node)
-        unvisted.pop(unvisted.index(target_node))
+    def get_width(self):
+        return self.width
 
-        #print("Dict ", shortest_distance_from_A)
-        #print(previous_vertex)
-
-        #print out the shortest route
-
-    return shortest_route(shortest_distance_from_A, previous_vertex)
-
-def find_smallest_dist(shortest_distance_dict, visted_nodes):
-
-    ## cycle through shortest_distance_dictionary to find the node with the current shortest distance and unvisted
-
-    largest_distance = math.inf
-    largest_node = ""
-    shortest_distance_dict_copy = shortest_distance_dict.copy()
-
-    ## remove all visted nodes from consideration
-    for node in visted_nodes:
-        if node in shortest_distance_dict_copy.keys():
-            shortest_distance_dict_copy.pop(node)
-
-    ## cycle through remaining nodes to find shortest distance, this will have problem with ties
-
-    for node in shortest_distance_dict_copy:
-
-        if shortest_distance_dict_copy[node] < largest_distance:
-            largest_distance = shortest_distance_dict_copy[node]
-            largest_node = node
-
-    return largest_node
-
-def select_paths(node, visited, node_links):
-
-    paths_from_node = {}
-
-    for link in node_links:
-        if node in link and node not in visited:
-            paths_from_node.update({link : node_links.get(link)})
-
-    return paths_from_node
-
-def check_routes(paths_from_node, shortest_distance_from_A, target_node, visited, previous_vert):
-
-    # calculate the distance from each neighbor vertex from start vertex
-    # if calculated distance is less than known distance update shortest distance list
-
-    distance_from_start = 0
-
-
-    # strip previously visited nodes from paths
-
-    for node in paths_from_node:
-
-        node_letter = node.strip(target_node)
-
-        # update previous node dictionary
-
-        if node_letter not in visited:
-            distance_from_start = paths_from_node.get(node) + shortest_distance_from_A.get(target_node)
-
-
-            if distance_from_start <= shortest_distance_from_A.get(node_letter):
-                shortest_distance_from_A.update({node_letter: distance_from_start})
-                previous_vert.update({node_letter:node.strip(node_letter)})
-
-def shortest_route(dict_of_data, path_dict):
-
-    # return a list ordered with the best part
-    copy = dict_of_data.copy()
-    copy = dict(sorted(copy.items(), key=lambda item: item[1]))
-
-    list_of_best_path = []
-
-    start_letter = ""
-
-    #Two methods exist here, one to print out to console, one to return a list
-
-    for letter in copy:
-        if dict_of_data.get(letter) == 0:
-            #print( letter, "is the start!")
-            start_letter = letter
-        else:
-            #print("shortest path from", letter, "is: ")
-            #recursive?
-            if letter == "Z":
-                shortest_route_2_list(letter,start_letter,path_dict, list_of_best_path)
-            #shortest_route_2(letter, start_letter, path_dict)
-    return list_of_best_path
-
-def shortest_route_2_list(letter,start_letter, previous_vertex,list_of_best_path):
-
-    if letter == start_letter:
-        return
-    else:
-        list_of_best_path.append(previous_vertex.get(letter) + letter)
-        shortest_route_2_list(previous_vertex.get(letter), start_letter, previous_vertex, list_of_best_path)
+    def get_id(self):
+        return self.id
 
 
 
-def shortest_route_2(letter, start_letter, previous_vertex):
+class Lines():
 
-    if letter == start_letter:
-        print("finished!")
-    else:
-        print(letter, "->", previous_vertex.get(letter))
-        shortest_route_2(previous_vertex.get(letter), start_letter, previous_vertex)
+    #define method to cacluate the distance of lines
+    def __init__(self, surface, color, start_pos, end_pos, id):
+        self.surface = surface
+        self.color = color
+        self.start_pos = start_pos
+        self.end_pos = end_pos
+        self.id = id
+
+    def __str__(self):
+        return self.id
+
+    def set_color(self, color):
+        self.color = color
+
+    def get_color(self):
+        return self.color
+
+    def get_surface(self):
+        return self.surface
+
+    def get_start_pos(self):
+        return self.start_pos
+
+    def get_end_pos(self):
+        return self.end_pos
+
+    def get_length(self):
+        return math.sqrt((self.end_pos[0] - self.start_pos[0]) ** 2) + (math.sqrt((self.end_pos[1] - self.start_pos[1]) ** 2))
+
+    def get_id(self):
+        return self.id
+
+
+def draw_window(circles_dict, lines_dict, num_array):
+
+    WIN.fill(WHITE)
+    pygame.draw.rect(WIN, GREEN, end_point)
+    pygame.draw.rect(WIN, LIGHT_SHADE, button)
+    WIN.blit(text, BUTTON_DEST)
+
+    # draw all the lines
+
+    for key in lines_dict:
+        for lines in lines_dict[key]:
+            pygame.draw.line(lines.get_surface(), lines.get_color(), lines.get_start_pos(), lines.get_end_pos())
+
+    # draw all the circles
+    for key in circles_dict:
+        for circle in circles_dict[key]:
+            pygame.draw.circle(circle.get_surface(), circle.get_color(), circle.get_pos(), circle.get_width())
+
+
+    pygame.display.update()
+
+def pass_list(lines,circles):
+
+    line_dictionary = lines.copy()
+    mega_dict = {}
+    shortest_path_dict = {}
+
+    # take each route from the lines dictionary and pass their respective distances into a new dictionary
+    for line_array in line_dictionary.keys():
+        for num in range(len(line_dictionary[line_array])):
+            mega_dict.update({line_dictionary[line_array][num].get_id(): line_dictionary[line_array][num].get_length()})
+
+    # take each circle array and pass their ids into a dictionary for Djirksta's algorithm
+    for circle_array in circles.keys():
+        for num in range(len(circles[circle_array])):
+
+            if circles[circle_array][num].get_id() == "A":
+                shortest_path_dict.update( {circles[circle_array][num].get_id(): 0})
+            else:
+                shortest_path_dict.update( {circles[circle_array][num].get_id(): math.inf})
+
+    # set the rect cost to inf
+    shortest_path_dict.update({"Z": math.inf})
+
+    # return the dictionaries
+    return mega_dict, shortest_path_dict
+
+
+
+"""
+currently working on a way to connect circles after the two main routes have been established to show the real power of the algorithm
+def circle_id_by_pos(pos, circles_dict):
+
+    for key in circles_dict:
+        for circle in  circles_dict[key]:
+            print(circle, circle.get_id())
+"""
+
+
+
+
+def main():
+
+    clock = pygame.time.Clock()
+
+    run = True
+    run_through = False
+    clicked_once = False
+    no_more = False
+
+    start_pos = ()
+
+    array_num = 0
+    circles, lines  = {},{}
+
+    id_circle = ""
+
+
+    # add all of one route to a list - done
+    # stop program after two routes in list_of_routes - done
+    # calculate distances from each circle - done
+    # display the distances (maybe)
+    # |-> make the distances between different links longer or shorter
+    # pass the list of distances to Djirksta - done
+    # return the best path - done
+    # change the best route to green - done
+
+
+    while run:
+
+        #setting the refresh rate
+        clock.tick(FPS)
+
+
+        for event in pygame.event.get():
+            # checking if the x is clicked
+            if event.type == pygame.QUIT:
+                run = False
+
+            # get the mouseclick
+            if event.type == pygame.MOUSEBUTTONUP and array_num < 2:
+
+                # getting the mouse position on click
+                pos = pygame.mouse.get_pos()
+
+                # handle when the route is completed
+                if end_point.collidepoint(pos):
+
+                    # draw a line from the last circle to the green box
+                    lines[array_num].append(Lines(WIN, (0, 0, 0), (GREEN_POS[0] + 25, GREEN_POS[1] + 25), circles[array_num][-1].get_pos(),
+                                                  circles[array_num][-1].get_id() + "Z"))
+
+                    # increase array_num so that the lines and circles are now stored in a new array
+                    array_num += 1
+                    circles[array_num] = []
+                    lines[array_num] = []
+
+
+                else:
+
+                    # setting up the dictionaries
+                    if len(circles) == 0 and len(lines) == 0:
+                        circles[array_num] = []
+                        lines[array_num] = []
+
+                    # adding the circles
+                    circles[array_num].append(Circle(WIN, (255, 0, 0), pos, 10))
+
+                    # adding the lines into an array after there are two circles
+                    if len(circles[array_num]) >= 2:
+                        lines[array_num].append(Lines(WIN, (0, 0, 0), pos, circles[array_num][-2].get_pos(),
+                                                      circles[array_num][-2].get_id() + circles[array_num][-1].get_id()))
+
+                    if len(circles[array_num]) == 1 and array_num > 0:
+                        lines[array_num].append(Lines(WIN, (0, 0, 0), circles[array_num-1][0].get_pos(), circles[array_num][-1].get_pos(),
+                                                      circles[array_num-1][0].get_id() + circles[array_num][-1].get_id()))
+
+            # handle the connection of different circles after the two arrays have been set
+            # if start pos has been set and it is after the routes have been set
+            if event.type == pygame.MOUSEBUTTONUP and no_more:
+                pos = pygame.mouse.get_pos()
+
+                # check if the position of the mouse when clicked is inside of a circle and then get that circle id, pos
+
+                # repeat to get second circle's id, pos
+                # draw line between the two circles by adding line to the array of lines
+
+
+                circle_id_by_pos(pos, circles)
+
+                # once the routes have been finished, take the dict of routes, and the shortest distance from A dict and pass to Djirksta
+                # update to use a button
+
+                if button.collidepoint(pos) and run_through != True:
+
+                    tuple_of_dicts = pass_list(lines, circles)
+
+                    best_path = Djirksta_Alg(tuple_of_dicts[0], tuple_of_dicts[1])
+
+                    # search through the route list and if the route matches change the color to Green
+                    for key in lines:
+                        for lines_ in lines[key]:
+                            if lines_.get_id() in best_path:
+                                lines_.set_color(GREEN)
+
+
+                    # Only make the algorithm run once
+                    run_through = True
+
+        if array_num >= 2:
+            no_more = True
+        # draw everything to the screen
+        draw_window(circles, lines, array_num)
+
+    pygame.quit()
+
+
+if __name__ == "__main__":
+    main()

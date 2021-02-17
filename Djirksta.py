@@ -1,5 +1,4 @@
 import pygame
-import sys
 from Djirskta import *
 
 pygame.init()
@@ -12,9 +11,11 @@ WHITE = (255, 255, 255)
 RADIUS = 10
 FPS = 60
 BUTTON_DEST = (WIDTH * .70, HEIGHT * .80)
+ORIGIN = (WIDTH/2, HEIGHT/2)
 
 GREEN_POS = (WIDTH * .75, HEIGHT/2)
 GREEN = (0,255,0)
+LINE_START_COLOR = (0,0,0)
 LIGHT_SHADE = (170,170,170)
 
 smallfont = pygame.font.SysFont('Corbel', 35)
@@ -23,6 +24,7 @@ text = smallfont.render('Calculate Path!', True,
 
 end_point = pygame.Rect(GREEN_POS[0], GREEN_POS[1], 50,50)
 button = pygame.Rect(BUTTON_DEST[0], BUTTON_DEST[1], 185,25)
+
 
 class Circle():
 
@@ -53,17 +55,16 @@ class Circle():
     def get_id(self):
         return self.id
 
-
-
 class Lines():
 
     #define method to cacluate the distance of lines
-    def __init__(self, surface, color, start_pos, end_pos, id):
+    def __init__(self, surface, color, start_pos, end_pos, id, special=False):
         self.surface = surface
         self.color = color
         self.start_pos = start_pos
         self.end_pos = end_pos
         self.id = id
+        self.special = special
 
     def __str__(self):
         return self.id
@@ -84,7 +85,10 @@ class Lines():
         return self.end_pos
 
     def get_length(self):
-        return math.sqrt((self.end_pos[0] - self.start_pos[0]) ** 2) + (math.sqrt((self.end_pos[1] - self.start_pos[1]) ** 2))
+        if self.special:
+            return (math.sqrt((self.end_pos[0] - self.start_pos[0]) ** 2) + (math.sqrt((self.end_pos[1] - self.start_pos[1]) ** 2))) * .8
+        else:
+            return math.sqrt((self.end_pos[0] - self.start_pos[0]) ** 2) + (math.sqrt((self.end_pos[1] - self.start_pos[1]) ** 2))
 
     def get_id(self):
         return self.id
@@ -108,9 +112,9 @@ def draw_window(circles_dict, lines_dict, num_array):
         for circle in circles_dict[key]:
             pygame.draw.circle(circle.get_surface(), circle.get_color(), circle.get_pos(), circle.get_width())
 
+
     pygame.display.update()
 
-    
 def pass_list(lines,circles_dict):
 
     lines_dict = lines.copy()
@@ -137,16 +141,22 @@ def pass_list(lines,circles_dict):
     # return the dictionaries
     return mega_dict, shortest_path_dict
 
-"""
-currently working on a way to connect circles after the two main routes have been established to show the real power of the algorithm
+
 def circle_id_by_pos(pos, circles_dict):
 
+    # cycle through all the circles
     for key in circles_dict:
-        for circle in  circles_dict[key]:
-            print(circle, circle.get_id())
-"""
+        for circle in circles_dict[key]:
 
+            # for each circle draw a rectangle over it
+            click_rect = pygame.Rect(circle.get_pos()[0] - 5, circle.get_pos()[1] - 5,10,10)
+            pygame.draw.rect(WIN, (255,255,255), click_rect)
 
+            # check if mouse click is within rectangle
+            if click_rect.collidepoint(pos):
+
+                # return the circle id
+                return circle.get_id()
 
 
 def main():
@@ -155,15 +165,12 @@ def main():
 
     run = True
     run_through = False
-    clicked_once = False
     no_more = False
 
-    start_pos = ()
 
     array_num = 0
     circles, lines  = {},{}
-
-    id_circle = ""
+    id_array = []
 
 
     # add all of one route to a list - done
@@ -197,7 +204,7 @@ def main():
                 if end_point.collidepoint(pos):
 
                     # draw a line from the last circle to the green box
-                    lines[array_num].append(Lines(WIN, (0, 0, 0), (GREEN_POS[0] + 25, GREEN_POS[1] + 25), circles[array_num][-1].get_pos(),
+                    lines[array_num].append(Lines(WIN, LINE_START_COLOR, (GREEN_POS[0] + 25, GREEN_POS[1] + 25), circles[array_num][-1].get_pos(),
                                                   circles[array_num][-1].get_id() + "Z"))
 
                     # increase array_num so that the lines and circles are now stored in a new array
@@ -218,11 +225,11 @@ def main():
 
                     # adding the lines into an array after there are two circles
                     if len(circles[array_num]) >= 2:
-                        lines[array_num].append(Lines(WIN, (0, 0, 0), pos, circles[array_num][-2].get_pos(),
+                        lines[array_num].append(Lines(WIN, LINE_START_COLOR, pos, circles[array_num][-2].get_pos(),
                                                       circles[array_num][-2].get_id() + circles[array_num][-1].get_id()))
 
                     if len(circles[array_num]) == 1 and array_num > 0:
-                        lines[array_num].append(Lines(WIN, (0, 0, 0), circles[array_num-1][0].get_pos(), circles[array_num][-1].get_pos(),
+                        lines[array_num].append(Lines(WIN, LINE_START_COLOR, circles[array_num-1][0].get_pos(), circles[array_num][-1].get_pos(),
                                                       circles[array_num-1][0].get_id() + circles[array_num][-1].get_id()))
 
             # handle the connection of different circles after the two arrays have been set
@@ -231,12 +238,21 @@ def main():
                 pos = pygame.mouse.get_pos()
 
                 # check if the position of the mouse when clicked is inside of a circle and then get that circle id, pos
-
                 # repeat to get second circle's id, pos
                 # draw line between the two circles by adding line to the array of lines
+                id_array.append(circle_id_by_pos(pos, circles))
+                if len(id_array) >= 2:
+                    for key in circles:
+                        for circle in circles[key]:
+                            if circle.get_id() == id_array[0]:
+                                starting_pos = circle.get_pos()
+                            if circle.get_id() == id_array[1]:
+                                ending_pos = circle.get_pos()
 
+                    lines[0].append(Lines(WIN, LINE_START_COLOR, starting_pos, ending_pos, id_array[0] + id_array[1], True))
 
-                circle_id_by_pos(pos, circles)
+                    id_array.clear()
+
 
                 # once the routes have been finished, take the dict of routes, and the shortest distance from A dict and pass to Djirksta
                 # update to use a button
